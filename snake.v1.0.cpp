@@ -6,7 +6,7 @@
 
 #include <iostream>
 #include <cstdlib>
-#include <ctime>
+#include <chrono>
 #include <SFML/Graphics.hpp>
 #include <vector>
 
@@ -17,6 +17,35 @@ const float fWidthField = 700.0F;  // Размер игрового поля п�
 const float fHeigthField = 500.0F; // Размер игрового поля по высоте
 
 enum direction {UP, DOWN, LEFT, RIGHT};
+
+
+class TimeGame final // Работа со временем
+{
+private:
+  double timeStartGame;
+  double microSec;
+
+public:
+
+  TimeGame()
+  {
+    timeStartGame = chrono::duration_cast<chrono::microseconds>(chrono::system_clock::now().time_since_epoch()).count(); // Фиксация времени при запуске
+  }
+  
+  double timeHasPassed()                                                                                 // Подсчёт времени (в миллисекундах) / Ритм игры
+  {
+    microSec = chrono::duration_cast<chrono::microseconds>(chrono::system_clock::now().time_since_epoch()).count(); //Получение времени(микросекунды)
+    microSec -= timeStartGame;
+
+    return microSec;
+  }
+
+  void resetTime()
+  {
+    timeStartGame = chrono::duration_cast<chrono::microseconds>(chrono::system_clock::now().time_since_epoch()).count();
+  }
+  
+};
 
 
 class Background // Фон игры
@@ -73,7 +102,7 @@ public:
     };
   
   
-  void motionAndViewHead (RenderWindow &window) // Функция движения головы
+  void motionAndViewHead (RenderWindow &window, double &time) // Функция движения головы
   {
     // Функция проигрыша при встрече со стеной
     
@@ -95,7 +124,7 @@ public:
 	
       case UP: // Направление вверх
 	{
-	  fSnakeHeadY -= fSpeed; 
+	  fSnakeHeadY -= fSpeed * time; 
 	  snakeHead.setPosition(fSnakeHeadX, fSnakeHeadY);
 	  snakeHead.setTextureRect(IntRect(sDirectionHead[UP][0],sDirectionHead[UP][1], sSizeHead, sSizeHead));
 	};
@@ -103,7 +132,7 @@ public:
 	
       case DOWN: // Направление вниз
 	{
-	  fSnakeHeadY += fSpeed;
+	  fSnakeHeadY += fSpeed * time;
 	  snakeHead.setPosition(fSnakeHeadX, fSnakeHeadY);
 	  snakeHead.setTextureRect(IntRect(sDirectionHead[DOWN][0], sDirectionHead[DOWN][1], sSizeHead, sSizeHead));
 	};
@@ -111,7 +140,7 @@ public:
 	
       case LEFT: // Направление влево
 	{
-	  fSnakeHeadX -= fSpeed;
+	  fSnakeHeadX -= fSpeed * time;
 	  snakeHead.setPosition(fSnakeHeadX, fSnakeHeadY);
 	  snakeHead.setTextureRect(IntRect(sDirectionHead[LEFT][0],sDirectionHead[LEFT][1], sSizeHead, sSizeHead));
 	};
@@ -119,7 +148,7 @@ public:
 	
       case RIGHT: // Направление вправо
 	{
-	  fSnakeHeadX += fSpeed;
+	  fSnakeHeadX += fSpeed * time;
 	  snakeHead.setPosition(fSnakeHeadX, fSnakeHeadY);
 	  snakeHead.setTextureRect(IntRect(sDirectionHead[RIGHT][0],sDirectionHead[RIGHT][1], sSizeHead, sSizeHead));
 	}
@@ -151,11 +180,12 @@ public:
 	fSnakeTailY[0] = head.fSnakeHeadY + head.sHalfSH + sHalfST;                                          // Координаты хвоста по высоте 
 	snakeTail.setPosition(fSnakeTailX[0], fSnakeTailY[0]);                                               // Начальная позиция хвоста
       }
-    
   }
-
   
   static short snCount;
+  static short snPrevCount;
+  static short delay;
+  static double dOldTime;
   
   Texture endTail;
   Texture bodyTail;
@@ -163,15 +193,15 @@ public:
 
   short sSizeTail;
   short sHalfST;
-  float fSnakeTailX[270];
-  float fSnakeTailY[270];
+  float fSnakeTailX[1300];
+  float fSnakeTailY[1300];
 
   float fOldPositionTailX;
   float fOldPositionTailY;
   float fNewPositionTailX;
   float fNewPositionTailY;
 
-  short snDirection[270];
+  short snDirection[1300];
   short snNewDirection;
   short snOldDirection;
 
@@ -184,7 +214,8 @@ public:
     };
 
 };
-void motionAndViewTail (SnakeHead &head,vector<SnakeTail*> &tail)
+
+void motionAndViewTail (SnakeHead &head,vector<SnakeTail*> &tail, double &time)
 {
   if (head.sDirection != -1)
     {
@@ -193,10 +224,37 @@ void motionAndViewTail (SnakeHead &head,vector<SnakeTail*> &tail)
 	  tail[0]->fNewPositionTailX = head.fSnakeHeadX;                 // Передача хвосту координат змейки по ширине
 	  tail[0]->fNewPositionTailY = head.fSnakeHeadY;                 // Передача хвосту координат змейки по высоте
 	  tail[0]->snNewDirection = head.sDirection;
-	  if (i < SnakeTail::snCount-1)
-	    tail[i]->snakeTail.setTexture(tail[i]->bodyTail);
 	  
-	  for (short j = 1; j <= 270; ++j) 
+	  if(SnakeTail::snCount != SnakeTail::snPrevCount)               // Вычисление задержки хвоста за головой
+	    {
+	      SnakeTail::snPrevCount = SnakeTail::snCount;
+	      if (time > SnakeTail::dOldTime)
+		{
+		  // SnakeTail::delay = (60 / 0.20) / time;
+		  SnakeTail::dOldTime = time;
+
+		  cout << "++++++++++++" << endl << "Смещение: " << SnakeTail::delay << endl
+		       << "Время: " << time << endl;
+		}
+	      else{}
+	      double dTempTime = 0;
+	      dTempTime = SnakeTail::dOldTime / SnakeTail::delay ;
+	      SnakeTail::delay = (head.sSizeHead / head.fSpeed) / (SnakeTail::dOldTime + dTempTime);
+
+	      cout << "___________" << endl
+		   << "Смещение: " << SnakeTail::delay << endl
+		   << "Время: " << time << endl
+		   << "Прошлое время: " << SnakeTail::dOldTime << endl
+		   << "Получено время: " << SnakeTail::dOldTime + dTempTime << endl
+		   << "Время на ячейку: " << SnakeTail::dOldTime / SnakeTail::delay << endl;
+
+	      SnakeTail::dOldTime = SnakeTail::dOldTime + dTempTime;
+	    }
+	    
+	  if (i < SnakeTail::snCount-1) // Замена текстур хвоста на туловище
+	    tail[i]->snakeTail.setTexture(tail[i]->bodyTail);
+
+	  for (short j = 1; j <= SnakeTail::delay; ++j) 
 	    {
 	      tail[i + 1]->fNewPositionTailX = tail[i]->fNewPositionTailX;         // Передача координат следующим ячейкам хвоста
 	      tail[i + 1]->fNewPositionTailY = tail[i]->fNewPositionTailY;         // Передача координат следующим ячейкам хвоста
@@ -256,6 +314,9 @@ void motionAndViewTail (SnakeHead &head,vector<SnakeTail*> &tail)
 }
 
 short SnakeTail::snCount = 1;
+short SnakeTail::snPrevCount = SnakeTail::snCount;
+short SnakeTail::delay = 1100;
+double SnakeTail::dOldTime = 0;
 
 
 class Food final
@@ -348,8 +409,12 @@ void control(Event &event, RenderWindow &window, SnakeHead &head)               
 
 int main()
 {
-  // Объекты игры
+  setlocale(LC_ALL, "rus");
   
+  // Объекты игры
+
+  TimeGame timeGame;
+  double time = 0;
   Background background;
   SnakeHead head;
   Food someFood;
@@ -366,11 +431,17 @@ int main()
   
   while (window.isOpen())
     {
+      // Игровое время
+
+      time = timeGame.timeHasPassed();
+      timeGame.resetTime();
+      time /= 700;
+      
       // Управление игрой
       
       control(event, window, head);
-      head.motionAndViewHead(window);
-      motionAndViewTail(head, tail);
+      head.motionAndViewHead(window, time);
+      motionAndViewTail(head, tail, time);
       someFood.eatFood(head);
       
       // Отрисовка
