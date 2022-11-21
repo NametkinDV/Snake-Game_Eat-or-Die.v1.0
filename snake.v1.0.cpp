@@ -1,6 +1,6 @@
 // Версия игры Snake: Eat or Die v1.0
 // Игра создана на базе библиотеки SFML
-// Содержит 3 класса: Голова, Хвост\Туловище, Еда
+// Содержит 4 класса: Время, Голова, Хвост\Туловище, Еда
 // и функцию управления игрой
 // Автор: Намёткин Дмитрий
 
@@ -78,7 +78,7 @@ public:
     fSnakeHeadX = (fWidthField / 2);                                                                      // Координаты головы по ширине
     fSnakeHeadY = (fHeigthField / 2);                                                                     // Координаты головы по высоте
     snakeHead.setPosition(fSnakeHeadX, fSnakeHeadY);                                                      // Начальная позиция головы
-    fSpeed = 0.20F;                                                                                       // Скорость передвижения
+    fSpeed = 0.04F;                                                                                       // Скорость передвижения
     sDirection = -1;                                                                                      // Направление головы
     cout << "Создание головы" << endl;
   }
@@ -163,7 +163,7 @@ public:
 class SnakeTail final
 {
 public:
-  explicit SnakeTail(SnakeHead &head)
+  explicit SnakeTail(SnakeHead &head, double &time)
   {  
     bodyTail.loadFromFile("./Textures.1.0/Body.png");                                                        // Путь к текстурам туловища
     endTail.loadFromFile("./Textures.1.0/TexturesTail.png");                                                 // Путь к текстурам хвоста
@@ -173,7 +173,9 @@ public:
     snakeTail.setTextureRect(IntRect(snDirectionTail[UP][0], snDirectionTail[UP][1], sSizeTail, sSizeTail)); // Область текстуры для отрисовки
     sHalfST = sSizeTail / 2;                                                                                 // Размер спрайта от края до центра
     snakeTail.setOrigin(sHalfST, sHalfST);                                                                   // Центр спрайта, от верхнего лев. угла
-
+    delay = (head.sSizeHead / head.fSpeed) / time;                                                           // Вычисление изначальной задержки за головой
+    dOldTime = time;                                                                                         // Инициализирование переменной прошлого времени
+    
     if (snCount == 1)                                                                                        
       {
 	fSnakeTailX[0] = head.fSnakeHeadX;                                                                   // Координаты хвоста по ширине
@@ -193,15 +195,15 @@ public:
 
   short sSizeTail;
   short sHalfST;
-  float fSnakeTailX[1300];
-  float fSnakeTailY[1300];
+  float fSnakeTailX[1200];
+  float fSnakeTailY[1200];
 
   float fOldPositionTailX;
   float fOldPositionTailY;
   float fNewPositionTailX;
   float fNewPositionTailY;
 
-  short snDirection[1300];
+  short snDirection[1200];
   short snNewDirection;
   short snOldDirection;
 
@@ -225,30 +227,35 @@ void motionAndViewTail (SnakeHead &head,vector<SnakeTail*> &tail, double &time)
 	  tail[0]->fNewPositionTailY = head.fSnakeHeadY;                 // Передача хвосту координат змейки по высоте
 	  tail[0]->snNewDirection = head.sDirection;
 	  
-	  if(SnakeTail::snCount != SnakeTail::snPrevCount)               // Вычисление задержки хвоста за головой
+	  if(SnakeTail::snCount != SnakeTail::snPrevCount)               // Если длина хвоста изменилась
 	    {
 	      SnakeTail::snPrevCount = SnakeTail::snCount;
-	      if (time > SnakeTail::dOldTime)
+
+	      if (time > SnakeTail::dOldTime)                            // Вычисление задержки хвоста за головой
 		{
-		  // SnakeTail::delay = (60 / 0.20) / time;
+		  SnakeTail::delay = (head.sSizeHead / head.fSpeed) / time;
 		  SnakeTail::dOldTime = time;
 
-		  cout << "++++++++++++" << endl << "Смещение: " << SnakeTail::delay << endl
-		       << "Время: " << time << endl;
+		  cout << "Смещение: " << SnakeTail::delay << endl
+		       << "Время: " << time << endl
+		       << "Прошлое время: " << SnakeTail::dOldTime << endl
+		       << "Получено время: " << time
+		       << "++++++++++++" << endl;
 		}
-	      else{}
+	      else{
 	      double dTempTime = 0;
-	      dTempTime = SnakeTail::dOldTime / SnakeTail::delay ;
+	      dTempTime = SnakeTail::dOldTime / (SnakeTail::delay);// * (SnakeTail::snCount-1)) ;
 	      SnakeTail::delay = (head.sSizeHead / head.fSpeed) / (SnakeTail::dOldTime + dTempTime);
 
-	      cout << "___________" << endl
-		   << "Смещение: " << SnakeTail::delay << endl
+	      cout << "Смещение: " << SnakeTail::delay << endl
 		   << "Время: " << time << endl
 		   << "Прошлое время: " << SnakeTail::dOldTime << endl
 		   << "Получено время: " << SnakeTail::dOldTime + dTempTime << endl
-		   << "Время на ячейку: " << SnakeTail::dOldTime / SnakeTail::delay << endl;
+		   << "Время на ячейку: " << SnakeTail::dOldTime / SnakeTail::delay << endl
+		   << "___________" << endl;
 
 	      SnakeTail::dOldTime = SnakeTail::dOldTime + dTempTime;
+	      }
 	    }
 	    
 	  if (i < SnakeTail::snCount-1) // Замена текстур хвоста на туловище
@@ -315,7 +322,7 @@ void motionAndViewTail (SnakeHead &head,vector<SnakeTail*> &tail, double &time)
 
 short SnakeTail::snCount = 1;
 short SnakeTail::snPrevCount = SnakeTail::snCount;
-short SnakeTail::delay = 1100;
+short SnakeTail::delay = 0;
 double SnakeTail::dOldTime = 0;
 
 
@@ -414,16 +421,19 @@ int main()
   // Объекты игры
 
   TimeGame timeGame;
-  double time = 0;
   Background background;
   SnakeHead head;
   Food someFood;
   Event event;
   vector <SnakeTail*> tail;
-  
+  double time = timeGame.timeHasPassed();
+  int nDivision = time / 1.9; //1.85197;
+  time /= nDivision;          // 100 * (60 / 0.04) 27500
+  cout << "First Time " << time << endl << "Ras" << nDivision << endl;
+
   for(int i = 0; i < 100; ++i)
     {
-      tail.push_back(new SnakeTail(head));
+      tail.push_back(new SnakeTail(head, time));
     }
 
   
@@ -435,7 +445,7 @@ int main()
 
       time = timeGame.timeHasPassed();
       timeGame.resetTime();
-      time /= 700;
+      time /= 100;
       
       // Управление игрой
       
