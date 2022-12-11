@@ -1,6 +1,6 @@
 // Версия игры Snake: Eat or Die v1.0
 // Игра создана на базе библиотеки SFML
-// Содержит 4 класса: Время, Голова, Хвост\Туловище, Еда
+// Содержит 5 классов: Время, Фон, Голова, Хвост\Туловище, Еда
 // и функцию управления игрой
 // Автор: Намёткин Дмитрий
 
@@ -18,35 +18,39 @@ const float fHeigthField = 500.0F; // Размер игрового поля п�
 enum direction {UP, DOWN, LEFT, RIGHT};
 enum pos {X, Y, DIR};
 
-int nCount = 0;
+
 class TimeGame final // Работа со временем
 {
 private:
+  double time = 0;
   double dTimeStartGame = 0;
   double dMicroSec = 0;
   double dSumTime = 0;
+  int nCount = 0;
   
-  bool bSwitchStart = false;
 public:
   TimeGame()
   {
     dTimeStartGame = chrono::duration_cast<chrono::microseconds>(chrono::system_clock::now().time_since_epoch()).count(); // Фиксация времени при запуске
   }
   
-  double timeHasPassed()                                                                                 // Подсчёт времени (в миллисекундах) / Ритм игры
+  
+  double timeHasPassed() // Подсчёт времени (в миллисекундах) / Ритм игры
   {
     dMicroSec = chrono::duration_cast<chrono::microseconds>(chrono::system_clock::now().time_since_epoch()).count(); //Получение времени(микросекунды)
     dMicroSec -= dTimeStartGame;
 
     return dMicroSec;
   }
-
-  void resetTime()
+  
+  
+  void resetTime() // Обнуление подсчёта времени
   {
     dTimeStartGame = chrono::duration_cast<chrono::microseconds>(chrono::system_clock::now().time_since_epoch()).count();
   }
-
-  void middleTime(double &time)
+  
+  
+  void averageTime() // Подсчёт среднего времени прохождения цикла игры
   {
     time = timeHasPassed();
     time /= 100;
@@ -63,6 +67,18 @@ public:
 	nCount /= 2;
       }
 
+  }
+  
+  
+  double getTime() // Получение текущего среднего времени прохождения цикла игры
+  {
+    return time;
+  }
+  
+  
+  int getCount() // Получение количества замеров времени
+  {
+    return nCount;
   }
   
 };
@@ -95,12 +111,12 @@ public:
     sHalfSH = sSizeHead / 2;                                                                              // Размер спрайта от края до центра
     snakeHead.setOrigin(sHalfSH, sHalfSH);                                                                // Центр спрайта, от верхнего лев. угла
 
-    fSnakeHeadX = (fWidthField / 2);                                                                      // Координаты головы по ширине
-    fSnakeHeadY = (fHeigthField / 2);                                                                     // Координаты головы по высоте
-    snakeHead.setPosition(fSnakeHeadX, fSnakeHeadY);                                                      // Начальная позиция головы
+    fSnakeHeadX = (fWidthField / 2);                                                                      // Начальные координаты головы по ширине
+    fSnakeHeadY = (fHeigthField / 2);                                                                     // Начальные координаты головы по высоте
+    snakeHead.setPosition(fSnakeHeadX, fSnakeHeadY);                                                      // Установка начальной позиция головы
     fSpeed = 0.04F;                                                                                       // Скорость передвижения
     sDirection = -1;                                                                                      // Направление головы
-    cout << "Создание головы" << endl;
+    cout << "Head created" << endl;
   }
 
   
@@ -122,7 +138,7 @@ public:
     };
   
   
-  void motionAndViewHead (RenderWindow &window, double &time) // Функция движения головы
+  void motionAndViewHead (RenderWindow &window, const double &time) // Функция движения головы
   {
     // Функция проигрыша при встрече со стеной
     
@@ -194,17 +210,19 @@ public:
     sHalfST = sSizeTail / 2;                                                                                 // Размер спрайта от края до центра
     snakeTail.setOrigin(sHalfST, sHalfST);                                                                   // Центр спрайта, от верхнего лев. угла
     
-    if (snCount == 1)                                                                                        
+    if (snCount == 1) // Если хвост в начале игры                                                                                        
       {
-	fSnakeTailX = head.fSnakeHeadX;                                                                   // Координаты хвоста по ширине
-	fSnakeTailY = head.fSnakeHeadY + head.sHalfSH + sHalfST;                                          // Координаты хвоста по высоте 
-	snakeTail.setPosition(fSnakeTailX, fSnakeTailY);                                               // Начальная позиция хвоста
+	fSnakeTailX = head.fSnakeHeadX;                                                                      // Координаты хвоста по ширине в начале игры
+	fSnakeTailY = head.fSnakeHeadY + head.sHalfSH + sHalfST;                                             // Координаты хвоста по высоте в начале игры
+	snakeTail.setPosition(fSnakeTailX, fSnakeTailY);                                                     // Позиция хвоста в начале игры
       }
   }
   
   static short snCount;
+  static short snPrevCount;
   static int delay;
   static int nSizeTail;
+  static bool bStartWithTime;
   
   Texture endTail;
   Texture bodyTail;
@@ -214,7 +232,7 @@ public:
   short sHalfST;
   float fSnakeTailX;
   float fSnakeTailY;
-
+  
   short snDirectionTail[4][2] = // Координаты отрисовки текстур хвоста и туловища
     {
      {0, 0},   // Вверх
@@ -226,77 +244,90 @@ public:
 };
 
 
-bool bStart = false;
-void motionAndViewTail (SnakeHead &head,vector<SnakeTail*> &tail, double &time, vector <vector<double>> &road)
+void motionAndViewTail (SnakeHead &head,vector<SnakeTail*> &tail, const double &time, const int &nCount, vector <vector<double>> &road)
 {
-    road[X].insert(road[X].begin(), head.fSnakeHeadX);
-    road[Y].insert(road[Y].begin(), head.fSnakeHeadY);
-    road[DIR].insert(road[DIR].begin(), head.sDirection);
-    
-    if (head.sDirection == -1 && nCount < 5 && bStart == false) { SnakeTail::delay = head.sSizeHead / head.fSpeed; } // До начала игры задержка хвоста без учёта времени
-    else                                                                          // Задержка хвоста с учётом времени
-      {
-	bStart = true;
-	
-	SnakeTail::delay = (head.sSizeHead  / head.fSpeed) / time; // Вычисление задержки хвоста за головой
-	
-	cout << "Смещение: " << SnakeTail::delay << endl
-	     << "Время: " << time << endl
-	     << "Объектов хвоста в игре: " << SnakeTail::snCount << endl;	  
-      }
+  road[X].insert(road[X].begin(), head.fSnakeHeadX);    // Сохранение маршрута/координат головы змейки по X
+  road[Y].insert(road[Y].begin(), head.fSnakeHeadY);    // Сохранение маршрута/координат головы змейки по Y
+  road[DIR].insert(road[DIR].begin(), head.sDirection); // Сохранение направлений головы змейки на маршруте
 
-    if (SnakeTail::delay > SnakeTail::nSizeTail) SnakeTail::nSizeTail = SnakeTail::delay;
-    
-    if ((int)road[X].size() > SnakeTail::nSizeTail * (SnakeTail::snCount+1)) road[X].pop_back();
-    if ((int)road[Y].size() > SnakeTail::nSizeTail * (SnakeTail::snCount+1)) road[Y].pop_back();
-    if ((int)road[DIR].size() > SnakeTail::nSizeTail * (SnakeTail::snCount+1)) road[DIR].pop_back();
-    
-    for(short i = 0; i <= SnakeTail::snCount; ++i)
-      {
-	if (i < SnakeTail::snCount-1) // Замена текстур хвоста на туловище
-	  tail[i]->snakeTail.setTexture(tail[i]->bodyTail);
+  
+  if (head.sDirection == -1 && nCount < 5 && SnakeTail::bStartWithTime == false) // Первые 4 замера времени в начале игры задержка хвоста без учёта времени
+    {
+      SnakeTail::delay = head.sSizeHead / head.fSpeed;
+    } 
 
-	if (head.sDirection != -1) tail[i]->snakeTail.setPosition(road[X][(i+1) * SnakeTail::delay], road[Y][(i+1) * SnakeTail::delay]);
-	
-	switch((int)road[DIR][(i+1) * SnakeTail::delay])
+  else // Задержка хвоста с учётом времени
+    {
+      SnakeTail::bStartWithTime = true;
+      SnakeTail::delay = (head.sSizeHead  / head.fSpeed) / time; // Вычисление задержки хвоста за головой
+      
+      //cout << "Delay between objects: " << SnakeTail::delay << endl
+      //   << "Time has passed: " << time << endl
+      //   << "Tail objects in the game: " << SnakeTail::snCount << endl;	  
+    }
+
+  
+  if (SnakeTail::delay > SnakeTail::nSizeTail) SnakeTail::nSizeTail = SnakeTail::delay; // Сохранение самой большой зафиксированной задержки между ячейками
+  
+  if ((int)road[X].size() > SnakeTail::nSizeTail * (SnakeTail::snCount+1)) road[X].pop_back();     // Удаление лишних координат маршрута головы по X
+  if ((int)road[Y].size() > SnakeTail::nSizeTail * (SnakeTail::snCount+1)) road[Y].pop_back();     // Удаление лишних координат маршрута головы по Y
+  if ((int)road[DIR].size() > SnakeTail::nSizeTail * (SnakeTail::snCount+1)) road[DIR].pop_back(); // Удаление лишних направлений головы на маршруте
+
+  
+  for(short i = 0; i < SnakeTail::snCount; ++i)
+    {
+      if (SnakeTail::snPrevCount != SnakeTail::snCount && i == SnakeTail::snCount-1) // Замена текстуры хвоста на туловище у предпоследнего объекта
+	{
+	  ++SnakeTail::snPrevCount;
+	  tail[i-1]->snakeTail.setTexture(tail[i]->bodyTail);
+	}
+      
+      if (head.sDirection != -1) // До начала движения хвост стоит на месте
+	{
+	  tail[i]->snakeTail.setPosition(road[X][(i+1) * SnakeTail::delay], road[Y][(i+1) * SnakeTail::delay]); // Установка позиции объектов хвоста
+	}
+      
+      switch((int)road[DIR][(i+1) * SnakeTail::delay])
+	{
+	  
+	case UP:
 	  {
-	    
-	    case UP:
-	      {
-		tail[i]->snakeTail.setTextureRect(IntRect(tail[i]->snDirectionTail[UP][0],tail[i]->snDirectionTail[UP][1],
-							  tail[i]->sSizeTail, tail[i]->sSizeTail)); 
-	      };
-	      break;
-	      
-	  case DOWN:
-	    {
-	      tail[i]->snakeTail.setTextureRect(IntRect(tail[i]->snDirectionTail[DOWN][0], tail[i]->snDirectionTail[DOWN][1],
-							tail[i]->sSizeTail, tail[i]->sSizeTail));
-	    };
-	      break;
-	      
-	  case LEFT:
-	    {
-	      tail[i]->snakeTail.setTextureRect(IntRect(tail[i]->snDirectionTail[LEFT][0],tail[i]->snDirectionTail[LEFT][1],
-							     tail[i]->sSizeTail, tail[i]->sSizeTail));
-	    };
-	    break;
-	    
-	  case RIGHT:
-	    {
-	      tail[i]->snakeTail.setTextureRect(IntRect(tail[i]->snDirectionTail[RIGHT][0], tail[i]->snDirectionTail[RIGHT][1],
-							tail[i]->sSizeTail, tail[i]->sSizeTail));
-	    };
-	    break;
-	      
-	  }
-      }
-  }
+	    tail[i]->snakeTail.setTextureRect(IntRect(tail[i]->snDirectionTail[UP][0],tail[i]->snDirectionTail[UP][1],
+						      tail[i]->sSizeTail, tail[i]->sSizeTail)); 
+	  };
+	  break;
+	  
+	case DOWN:
+	  {
+	    tail[i]->snakeTail.setTextureRect(IntRect(tail[i]->snDirectionTail[DOWN][0], tail[i]->snDirectionTail[DOWN][1],
+						      tail[i]->sSizeTail, tail[i]->sSizeTail));
+	  };
+	  break;
+	  
+	case LEFT:
+	  {
+	    tail[i]->snakeTail.setTextureRect(IntRect(tail[i]->snDirectionTail[LEFT][0],tail[i]->snDirectionTail[LEFT][1],
+						      tail[i]->sSizeTail, tail[i]->sSizeTail));
+	  };
+	  break;
+	  
+	case RIGHT:
+	  {
+	    tail[i]->snakeTail.setTextureRect(IntRect(tail[i]->snDirectionTail[RIGHT][0], tail[i]->snDirectionTail[RIGHT][1],
+						      tail[i]->sSizeTail, tail[i]->sSizeTail));
+	  };
+	  break;
+	  
+	}
+    }
+}
 
 
 short SnakeTail::snCount = 1;
+short SnakeTail::snPrevCount = 1;
 int SnakeTail::delay = 0;
 int SnakeTail::nSizeTail = 1500;
+bool SnakeTail::bStartWithTime = false;
 
 
 class Food final
@@ -308,14 +339,16 @@ public:
     food.setTexture(textureApple);                                                                        // Присвоение текстуры спрайту
     sSizeFood = 26;                                                                                       // Размер спрайта еды
     food.setTextureRect(IntRect(0, 0, sSizeFood, sSizeFood));                                             // Область текстуры для отрисовки
-    fHalfFood = 13;                                                                                       // Размер спрайта от края до центра
+    fHalfFood = sSizeFood / 2;                                                                            // Размер спрайта от края до центра
     food.setOrigin(fHalfFood, fHalfFood);                                                                 // Центр спрайта, от верхнего лев. угла
 
     srand(time(0));
-    fPositionFoodX = sSizeFood + rand() % (((int)fWidthField - sSizeFood)  - sSizeFood + 1);              // Координаты еды по ширине
-    fPositionFoodY = sSizeFood + rand() % (((int)fHeigthField - sSizeFood) - sSizeFood + 1);              // Координаты еды по высоте
-    food.setPosition(fPositionFoodX, fPositionFoodY);                                                     // Начальная позиция еды
-    cout << "Создание еды" << endl;
+    fPositionFoodX = rand() % ((int)fWidthField-1  - sSizeFood);                                          // Координаты еды по ширине в начале игры
+    if (fPositionFoodX < sSizeFood) fPositionFoodX += sSizeFood;
+    fPositionFoodY = rand() % ((int)fHeigthField-1 - sSizeFood);                                          // Координаты еды по высоте в начале игры
+    if (fPositionFoodY < sSizeFood) fPositionFoodY += sSizeFood;
+    food.setPosition(fPositionFoodX, fPositionFoodY);                                                     // Позиция еды в начале игры
+    cout << "Food created" << endl;
   }
 
   Texture textureApple;
@@ -328,23 +361,27 @@ public:
 
 
   void eatFood(SnakeHead &head)
-    {
-      if ((head.fSnakeHeadX + head.sHalfSH >= fPositionFoodX - fHalfFood && head.fSnakeHeadX - head.sHalfSH <= fPositionFoodX + fHalfFood) &&
-	  (head.fSnakeHeadY + head.sHalfSH >= fPositionFoodY - fHalfFood && head.fSnakeHeadY - head.sHalfSH <= fPositionFoodY + fHalfFood))
-	{
-	  fPositionFoodX = rand() % ((int)fWidthField  - sSizeFood);
-	  fPositionFoodY = rand() % ((int)fHeigthField - sSizeFood);
-	  food.setPosition(fPositionFoodX, fPositionFoodY);
-
-	  ++SnakeTail::snCount;
-	  cout << "Объектов хвоста в игре: " << SnakeTail::snCount << endl;
-	}
-    }
+  { // Диапазон съедания еды
+    if ((head.fSnakeHeadX + head.sHalfSH >= fPositionFoodX - fHalfFood && head.fSnakeHeadX - head.sHalfSH <= fPositionFoodX + fHalfFood) &&
+	(head.fSnakeHeadY + head.sHalfSH >= fPositionFoodY - fHalfFood && head.fSnakeHeadY - head.sHalfSH <= fPositionFoodY + fHalfFood))
+      {
+	// Пересчёт координат еды
+	
+	fPositionFoodX = rand() % ((int)fWidthField-1  - sSizeFood);
+	if (fPositionFoodX < sSizeFood) fPositionFoodX += sSizeFood;
+	fPositionFoodY = rand() % ((int)fHeigthField-1 - sSizeFood);
+	if (fPositionFoodY < sSizeFood) fPositionFoodY += sSizeFood;
+	food.setPosition(fPositionFoodX, fPositionFoodY);
+	
+	++SnakeTail::snCount;
+	cout << "Tail objects in the game: " << SnakeTail::snCount << endl;
+      }
+  }
   
 };
 
 
-void control(Event &event, RenderWindow &window, SnakeHead &head)                                        // Функция управления игрой
+void control(Event &event, RenderWindow &window, SnakeHead &head) // Функция управления игрой
 {
   while (window.pollEvent(event))
     {
@@ -384,9 +421,7 @@ void control(Event &event, RenderWindow &window, SnakeHead &head)               
 
 
 int main()
-{
-  setlocale(LC_ALL, "rus");
-  
+{  
   // Объекты игры
 
   TimeGame timeGame;
@@ -397,7 +432,6 @@ int main()
 
   vector <vector<double>> road;
   vector <SnakeTail*> tail;
-  double time = 0;
 
   vector<double> one;
   vector<double> two;
@@ -425,9 +459,9 @@ int main()
       // Управление игрой
       
       control(event, window, head);
-      timeGame.middleTime(time);
-      head.motionAndViewHead(window, time);
-      motionAndViewTail(head, tail, time, road);
+      timeGame.averageTime();
+      head.motionAndViewHead(window, timeGame.getTime());
+      motionAndViewTail(head, tail, timeGame.getTime(), timeGame.getCount(), road);
       someFood.eatFood(head);
       
       // Отрисовка
