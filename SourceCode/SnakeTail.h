@@ -10,12 +10,14 @@ public:
   
   static short snCount;
   static short snPrevCount;
-  static int delay;
+  static int nDelay;
+  static int nHeadDelayDiffer;
   static int nSizeTail;
   static bool bStartWithTime;
   
-  Texture endTail;
   Texture bodyTail;
+  Texture firstEndTail;
+  Texture secondEndTail;
   Sprite snakeTail;
 
   short sSizeTail;
@@ -26,9 +28,9 @@ public:
   short snDirectionTail[4][2] = // Координаты отрисовки текстур хвоста и туловища
     {
      {0, 0},   // Вверх
-     {0, 60},  // Вниз
-     {60, 0},  // Влево
-     {60, 60}  // Вправо
+     {0, 26},  // Вниз
+     {26, 0},  // Влево
+     {26, 26}  // Вправо
     };
 
 };

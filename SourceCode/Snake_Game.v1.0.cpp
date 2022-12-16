@@ -41,13 +41,15 @@ void motionAndViewTail (SnakeHead &head,vector<SnakeTail*> &tail, const double &
   
   if (head.sDirection == -1 && nCount < 5 && SnakeTail::bStartWithTime == false) // Первые 4 замера времени в начале игры задержка хвоста без учёта времени
     {
-      SnakeTail::delay = head.sSizeHead / head.fSpeed;
+      SnakeTail::nDelay = tail[0]->sSizeTail / head.fSpeed;
+      SnakeTail::nHeadDelayDiffer = (head.sHalfSH - tail[0]->sHalfST) / head.fSpeed;
     } 
 
   else // Задержка хвоста с учётом времени
     {
       SnakeTail::bStartWithTime = true;
-      SnakeTail::delay = (head.sSizeHead  / head.fSpeed) / time; // Вычисление задержки хвоста за головой
+      SnakeTail::nDelay = (tail[0]->sSizeTail / head.fSpeed) / time; // Вычисление задержки хвоста за головой
+      SnakeTail::nHeadDelayDiffer = ((head.sHalfSH - tail[0]->sHalfST) / head.fSpeed) / time; // Вычисление дополнительной задержки при разнице размеров с головой
       
       //cout << "Delay between objects: " << SnakeTail::delay << endl
       //   << "Time has passed: " << time << endl
@@ -55,7 +57,7 @@ void motionAndViewTail (SnakeHead &head,vector<SnakeTail*> &tail, const double &
     }
 
   
-  if (SnakeTail::delay > SnakeTail::nSizeTail) SnakeTail::nSizeTail = SnakeTail::delay; // Сохранение самой большой зафиксированной задержки между ячейками
+  if (SnakeTail::nDelay > SnakeTail::nSizeTail) SnakeTail::nSizeTail = SnakeTail::nDelay; // Сохранение самой большой зафиксированной задержки между ячейками
   
   if ((int)road[X].size() > SnakeTail::nSizeTail * (SnakeTail::snCount+1)) road[X].pop_back();     // Удаление лишних координат маршрута головы по X
   if ((int)road[Y].size() > SnakeTail::nSizeTail * (SnakeTail::snCount+1)) road[Y].pop_back();     // Удаление лишних координат маршрута головы по Y
@@ -67,45 +69,50 @@ void motionAndViewTail (SnakeHead &head,vector<SnakeTail*> &tail, const double &
       if (SnakeTail::snPrevCount != SnakeTail::snCount && i == SnakeTail::snCount-1) // Замена текстуры хвоста на туловище у предпоследнего объекта
 	{
 	  ++SnakeTail::snPrevCount;
-	  tail[i-1]->snakeTail.setTexture(tail[i]->bodyTail);
+	  tail[i-2]->snakeTail.setTexture(tail[i]->bodyTail);
+	  tail[i-1]->snakeTail.setTexture(tail[i]->firstEndTail);
 	}
       
       if (head.sDirection != -1) // До начала движения хвост стоит на месте
 	{
-	  tail[i]->snakeTail.setPosition(road[X][(i+1) * SnakeTail::delay], road[Y][(i+1) * SnakeTail::delay]); // Установка позиции объектов хвоста
-	}
+	  // Установка позиции объектов хвоста
+
+	  tail[i]->snakeTail.setPosition(road[X][((i+1) * SnakeTail::nDelay) + SnakeTail::nHeadDelayDiffer],  // Позиция с учётом смещения ячейки и размера головы по X
+					 road[Y][((i+1) * SnakeTail::nDelay) + SnakeTail::nHeadDelayDiffer]); // Позиция с учётом смещения ячейки и размера головы по Y
+	
       
-      switch((int)road[DIR][(i+1) * SnakeTail::delay])
-	{
-	  
-	case UP:
-	  {
-	    tail[i]->snakeTail.setTextureRect(IntRect(tail[i]->snDirectionTail[UP][0],tail[i]->snDirectionTail[UP][1],
-						      tail[i]->sSizeTail, tail[i]->sSizeTail)); 
-	  };
-	  break;
-	  
-	case DOWN:
-	  {
-	    tail[i]->snakeTail.setTextureRect(IntRect(tail[i]->snDirectionTail[DOWN][0], tail[i]->snDirectionTail[DOWN][1],
-						      tail[i]->sSizeTail, tail[i]->sSizeTail));
-	  };
-	  break;
-	  
-	case LEFT:
-	  {
-	    tail[i]->snakeTail.setTextureRect(IntRect(tail[i]->snDirectionTail[LEFT][0],tail[i]->snDirectionTail[LEFT][1],
-						      tail[i]->sSizeTail, tail[i]->sSizeTail));
-	  };
-	  break;
-	  
-	case RIGHT:
-	  {
-	    tail[i]->snakeTail.setTextureRect(IntRect(tail[i]->snDirectionTail[RIGHT][0], tail[i]->snDirectionTail[RIGHT][1],
-						      tail[i]->sSizeTail, tail[i]->sSizeTail));
-	  };
-	  break;
-	  
+	  switch((int)road[DIR][((i+1) * SnakeTail::nDelay) + SnakeTail::nHeadDelayDiffer]) // Установка направления текстуры с учётом смещения ячейки и размера головы
+	    {
+	      
+	    case UP:
+	      {
+		tail[i]->snakeTail.setTextureRect(IntRect(tail[i]->snDirectionTail[UP][0],tail[i]->snDirectionTail[UP][1],
+							  tail[i]->sSizeTail, tail[i]->sSizeTail)); 
+	      };
+	      break;
+	      
+	    case DOWN:
+	      {
+		tail[i]->snakeTail.setTextureRect(IntRect(tail[i]->snDirectionTail[DOWN][0], tail[i]->snDirectionTail[DOWN][1],
+							  tail[i]->sSizeTail, tail[i]->sSizeTail));
+	      };
+	      break;
+	      
+	    case LEFT:
+	      {
+		tail[i]->snakeTail.setTextureRect(IntRect(tail[i]->snDirectionTail[LEFT][0],tail[i]->snDirectionTail[LEFT][1],
+							  tail[i]->sSizeTail, tail[i]->sSizeTail));
+	      };
+	      break;
+	      
+	    case RIGHT:
+	      {
+		tail[i]->snakeTail.setTextureRect(IntRect(tail[i]->snDirectionTail[RIGHT][0], tail[i]->snDirectionTail[RIGHT][1],
+							  tail[i]->sSizeTail, tail[i]->sSizeTail));
+	      };
+	      break;
+	      
+	    }
 	}
     }
 }
@@ -226,7 +233,7 @@ int main()
       tail.push_back(new SnakeTail(head));
     }
   
-  for(int i = 0; i < 3000; ++i)
+  for(int i = 0; i < 3000 * SnakeTail::snCount; ++i)
     {
       road[X].push_back(0);
       road[Y].push_back(0);
