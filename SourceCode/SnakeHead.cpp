@@ -77,5 +77,6 @@ void SnakeHead::motionAndViewHead (RenderWindow &window, const double &time) // 
       }
       
     }
-  
+
+  window.draw(snakeHead); // Отрисовка головы на экране
 }
