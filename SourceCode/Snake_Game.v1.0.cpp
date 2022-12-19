@@ -25,11 +25,48 @@ public:
   {
     textureBackground.loadFromFile("./Textures.1.0/Wall.png"); // Путь к текстурам фона
     backgroundArea.setTexture(textureBackground);              // Присвоение текстуры спрайту
+
+    gameFont.loadFromFile("./PeaceSans/PeaceSansWebfont.ttf");
+
+    text.setFont(gameFont);
+    text.setCharacterSize(25);
+    text.setString(szStringText + szStringNumber);
+    text.setPosition(260, 0);
+
+    rectangle.setSize(Vector2f(fWidthWindow, snSizeRectangle));
+    rectangle.setFillColor(Color::Black);
   }
   
   Texture textureBackground;
   Sprite backgroundArea;
+
+  RectangleShape rectangle;
+  short snSizeRectangle = 30;
+
+  int num = 0; 
+  string szStringText = "Score: ", szStringNumber = "00000";
   
+  Font gameFont;
+  Text text;
+
+  void drawBackground(RenderWindow &window)
+  {
+    window.draw(backgroundArea);
+    window.draw(rectangle);
+    window.draw(text);
+ 
+  }
+
+  void increasePoints()
+  {
+    num += 10;
+    szStringNumber = to_string(num);
+
+    if (num >= 10000) text.setString(szStringText + szStringNumber);
+    else if (num >= 1000) text.setString(szStringText + "0" + szStringNumber);
+    else if (num >= 100) text.setString(szStringText + "00" + szStringNumber);
+    else text.setString(szStringText + "000" + szStringNumber);
+  }
 };
 
 
@@ -179,7 +216,7 @@ public:
 class Food final
 {
 public:
-  explicit Food()
+  explicit Food(Background &background)
   {
     textureApple.loadFromFile("./Textures.1.0/Apple.png");                                                // Путь к текстурам яблока
     food.setTexture(textureApple);                                                                        // Присвоение текстуры спрайту
@@ -189,12 +226,12 @@ public:
     food.setOrigin(fHalfFood, fHalfFood);                                                                 // Центр спрайта, от верхнего лев. угла
 
     srand(time(0));
-    fPositionFoodX = rand() % ((int)fWidthField-1  - sSizeFood);                                          // Координаты еды по ширине в начале игры
+    fPositionFoodX = rand() % ((int)fWidthField - sSizeFood);                                          // Координаты еды по ширине в начале игры
     if (fPositionFoodX < sSizeFood) fPositionFoodX += sSizeFood;
-    fPositionFoodY = rand() % ((int)fHeigthField-1 - sSizeFood);                                          // Координаты еды по высоте в начале игры
-    if (fPositionFoodY < sSizeFood) fPositionFoodY += sSizeFood;
+    fPositionFoodY = rand() % ((int)fHeigthField - sSizeFood + background.snSizeRectangle);            // Координаты еды по высоте в начале игры
+    if (fPositionFoodY < sSizeFood + background.snSizeRectangle) fPositionFoodY += sSizeFood + background.snSizeRectangle;
     food.setPosition(fPositionFoodX, fPositionFoodY);                                                     // Позиция еды в начале игры
-    cout << "Food created" << endl;
+    //cout << "Food created" << endl;
   }
 
   Texture textureApple;
@@ -206,21 +243,23 @@ public:
   float fPositionFoodY;
 
 
-  void eatFood(RenderWindow &window, SnakeHead &head)
+  void eatFood(RenderWindow &window, SnakeHead &head, Background &background)
   { // Диапазон съедания еды
     if ((head.fSnakeHeadX + head.sHalfSH >= fPositionFoodX - fHalfFood && head.fSnakeHeadX - head.sHalfSH <= fPositionFoodX + fHalfFood) &&
 	(head.fSnakeHeadY + head.sHalfSH >= fPositionFoodY - fHalfFood && head.fSnakeHeadY - head.sHalfSH <= fPositionFoodY + fHalfFood))
       {
 	// Пересчёт координат еды
 	
-	fPositionFoodX = rand() % ((int)fWidthField-1  - sSizeFood);
+	fPositionFoodX = rand() % ((int)fWidthField  - sSizeFood);
 	if (fPositionFoodX < sSizeFood) fPositionFoodX += sSizeFood;
-	fPositionFoodY = rand() % ((int)fHeigthField-1 - sSizeFood);
-	if (fPositionFoodY < sSizeFood) fPositionFoodY += sSizeFood;
+	fPositionFoodY = rand() % ((int)fHeigthField - sSizeFood + background.snSizeRectangle);
+	if (fPositionFoodY < sSizeFood + background.snSizeRectangle) fPositionFoodY += sSizeFood + background.snSizeRectangle;
 	food.setPosition(fPositionFoodX, fPositionFoodY);
 	
 	++SnakeTail::snCount;
-	cout << "Tail objects in the game: " << SnakeTail::snCount << endl;
+	//cout << "Tail objects in the game: " << SnakeTail::snCount << endl;
+
+	background.increasePoints();
       }
 
     window.draw(food); // Отрисовка еды на экране
@@ -275,10 +314,10 @@ int main()
   TimeGame timeGame;
   Background background;
   SnakeOBJ snake;
-  Food someFood;
+  Food someFood(background);
   Event event;
   
-  RenderWindow window(VideoMode(fWidthField, fHeigthField), "Snake: Eat or Die! V.1.0");
+  RenderWindow window(VideoMode(fWidthWindow, fHeigthWindow), "Snake: Eat or Die! V.1.0");
 
   while (window.isOpen())
     {
@@ -286,13 +325,13 @@ int main()
       
       control(event, window, snake.head);
       timeGame.averageTime();
+      background.drawBackground(window);
       snake.motionAndViewTail(window, timeGame);
-      someFood.eatFood(window, snake.head);
-      
+      someFood.eatFood(window, snake.head, background);
+
       // Отрисовка
       
       window.display();
-      window.draw(background.backgroundArea);  
     }
 
   return 0;  

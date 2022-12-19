@@ -21,7 +21,7 @@ SnakeHead::SnakeHead()
   snakeHead.setPosition(fSnakeHeadX, fSnakeHeadY);                                                      // Установка начальной позиция головы
   fSpeed = 0.04F;                                                                                       // Скорость передвижения
   sDirection = -1;                                                                                      // Направление головы
-  cout << "Head created" << endl;
+  //cout << "Head created" << endl;
 }
 
   
@@ -29,7 +29,8 @@ void SnakeHead::motionAndViewHead (RenderWindow &window, const double &time) // 
 {
   // Функция проигрыша при встрече со стеной
   
-  if(fSnakeHeadX <= sHalfSH || fSnakeHeadX >= fWidthField - sHalfSH || fSnakeHeadY <= sHalfSH || fSnakeHeadY >= fHeigthField - sHalfSH)
+  if(fSnakeHeadX <= (fWidthWindow - fWidthField + sHalfSH) || fSnakeHeadX >= (fWidthField - sHalfSH) ||
+     fSnakeHeadY <= (fHeigthWindow - fHeigthField + sHalfSH) || fSnakeHeadY >= (fHeigthField - sHalfSH + 30))
     {
       window.close();
     }
