@@ -27,21 +27,30 @@ void TimeGame::resetTime() // Обнуление подсчёта времени
   
 void TimeGame::averageTime() // Подсчёт среднего времени прохождения цикла игры
   {
-    time = timeHasPassed();
-    time /= 100;
-    resetTime();
-
-    dSumTime += time;
-    ++nCount;
-	
-    time = (dSumTime / nCount);
-	
-    if (nCount > 100000)
+    if (bSkip == false)
       {
-	dSumTime /= 2;
-	nCount /= 2;
+	time = timeHasPassed();
+	time /= 100;
+	resetTime();
+	
+	dSumTime += time;
+	++nCount;
+	
+	time = (dSumTime / nCount);
+	
+	if (nCount > 100000)
+	  {
+	    dSumTime /= 2;
+	    nCount /= 2;
+	  }
+	//cout << time << endl; // Вывод полученного времени
       }
-    //cout << time << endl; // Вывод полученного времени
+    
+    else
+      {
+	resetTime();
+	bSkip = false;
+      }
   }
   
   
@@ -55,3 +64,8 @@ int TimeGame::getCount() // Получение количества замеро
   {
     return nCount;
   }
+
+void TimeGame::skipCounting() // Пропустить подсчёт текущего времени
+{
+  bSkip = true;
+}

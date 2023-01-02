@@ -29,10 +29,18 @@ void SnakeHead::motionAndViewHead (RenderWindow &window, const double &time) // 
 {
   // Функция проигрыша при встрече со стеной
   
-  if(fSnakeHeadX <= (fWidthWindow - fWidthField + sHalfSH) || fSnakeHeadX >= (fWidthField - sHalfSH) ||
-     fSnakeHeadY <= (fHeigthWindow - fHeigthField + sHalfSH) || fSnakeHeadY >= (fHeigthField - sHalfSH + 30))
+  if(nHeadControlLosingTheGame == WithoutMenu &&
+     (fSnakeHeadX <= (fWidthWindow - fWidthField + sHalfSH) || fSnakeHeadX >= (fWidthField - sHalfSH) ||
+      fSnakeHeadY <= (fHeigthWindow - fHeigthField + sHalfSH) || fSnakeHeadY >= (fHeigthField - sHalfSH + 30)))
     {
       window.close();
+    }
+
+  else if (nHeadControlLosingTheGame == WithMenu &&
+	   (fSnakeHeadX <= (fWidthWindow - fWidthField + sHalfSH) || fSnakeHeadX >= (fWidthField - sHalfSH) ||
+	    fSnakeHeadY <= (fHeigthWindow - fHeigthField + sHalfSH) || fSnakeHeadY >= (fHeigthField - sHalfSH + 30)))
+    {
+      nHeadControlLosingTheGame = GameOver;
     }
   
   /* // Функция переноса змейки на противоположную сторону
@@ -80,4 +88,30 @@ void SnakeHead::motionAndViewHead (RenderWindow &window, const double &time) // 
     }
 
   window.draw(snakeHead); // Отрисовка головы на экране
+}
+
+void SnakeHead::controlHead (Event event)
+{
+  if (event.type == Event::KeyPressed)
+	  {
+	    if ((Keyboard::isKeyPressed(Keyboard::Up)    || Keyboard::isKeyPressed(Keyboard::W)) && sDirection != DOWN)
+	      {
+		sDirection = UP;
+	      }
+	    
+	    if ((Keyboard::isKeyPressed(Keyboard::Down)  || Keyboard::isKeyPressed(Keyboard::S)) && sDirection != UP)
+	      {
+		sDirection = DOWN;
+	      }
+	    
+	    if ((Keyboard::isKeyPressed(Keyboard::Left)  || Keyboard::isKeyPressed(Keyboard::A)) && sDirection != RIGHT)
+	      {
+		sDirection = LEFT;
+	      }
+	    
+	    if ((Keyboard::isKeyPressed(Keyboard::Right) || Keyboard::isKeyPressed(Keyboard::D)) && sDirection != LEFT)
+	      {
+		sDirection = RIGHT;
+	      }
+	  }
 }

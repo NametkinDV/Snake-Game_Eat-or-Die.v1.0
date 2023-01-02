@@ -26,9 +26,12 @@ public:
      {60, 0},  // Влево
      {60, 60}  // Вправо
     };
+
+  enum GameLossControl { WithoutMenu, WithMenu, GameOver};
+  int nHeadControlLosingTheGame;
   
   
   void motionAndViewHead (RenderWindow &window, const double &time); // Функция движения головы
-    
+  void controlHead (Event event); // Функция управления головой
 };
 #endif

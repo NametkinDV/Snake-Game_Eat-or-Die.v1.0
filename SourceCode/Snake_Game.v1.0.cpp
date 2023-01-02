@@ -18,59 +18,266 @@ using namespace std;
 using namespace sf;
 
 
-class Background // Фон игры
+class TextGame final // Текст в игре
 {
 public:
-  Background()
+  TextGame()
   {
-    textureBackground.loadFromFile("./Textures.1.0/Wall.png"); // Путь к текстурам фона
-    backgroundArea.setTexture(textureBackground);              // Присвоение текстуры спрайту
-
     gameFont.loadFromFile("./PeaceSans/PeaceSansWebfont.ttf");
-
     text.setFont(gameFont);
-    text.setCharacterSize(25);
-    text.setString(szStringText + szStringNumber);
-    text.setPosition(260, 0);
+  }
+
+  Font gameFont;
+  Text text;
+};
+
+
+class Background // Фон
+{
+public:
+  Background(const string &path) : pathOfTexture(path)
+  {
+    textureBackground.loadFromFile(pathOfTexture); // Путь к текстурам фона
+    backgroundArea.setTexture(textureBackground);  // Присвоение текстуры спрайту
+  }
+  
+  Texture textureBackground;
+  Sprite backgroundArea; 
+  string pathOfTexture;
+  
+  void drawBackground(RenderWindow &window)
+  {
+    window.draw(backgroundArea);
+  }
+  
+};
+
+
+class BackgroundLevel : public Background // Фон уровня
+{
+public:
+  BackgroundLevel(const string &pathOfTexture) : Background{pathOfTexture}
+  {
+    textScore.text.setCharacterSize(25);
+    textScore.text.setString(szStringText + szStringNumber);
+    textScore.text.setPosition(260, 0);
+
+    textInfo.text.setCharacterSize(15);
+    textInfo.text.setString("Press  Space  for  pause");
+    textInfo.text.setPosition(0, 7);
 
     rectangle.setSize(Vector2f(fWidthWindow, snSizeRectangle));
     rectangle.setFillColor(Color::Black);
   }
   
-  Texture textureBackground;
-  Sprite backgroundArea;
-
+  TextGame textScore;
+  TextGame textInfo;
   RectangleShape rectangle;
   short snSizeRectangle = 30;
 
   int num = 0; 
   string szStringText = "Score: ", szStringNumber = "00000";
   
-  Font gameFont;
-  Text text;
-
+  
   void drawBackground(RenderWindow &window)
   {
     window.draw(backgroundArea);
     window.draw(rectangle);
-    window.draw(text);
- 
+    window.draw(textScore.text);
+    window.draw(textInfo.text);
   }
-
+  
+  
   void increasePoints()
   {
     num += 10;
     szStringNumber = to_string(num);
 
-    if (num >= 10000) text.setString(szStringText + szStringNumber);
-    else if (num >= 1000) text.setString(szStringText + "0" + szStringNumber);
-    else if (num >= 100) text.setString(szStringText + "00" + szStringNumber);
-    else text.setString(szStringText + "000" + szStringNumber);
+    if (num >= 10000) textScore.text.setString(szStringText + szStringNumber);
+    else if (num >= 1000) textScore.text.setString(szStringText + "0" + szStringNumber);
+    else if (num >= 100) textScore.text.setString(szStringText + "00" + szStringNumber);
+    else textScore.text.setString(szStringText + "000" + szStringNumber);
   }
 };
 
 
-class SnakeOBJ
+class Menu final
+{
+  //protected:
+public:
+
+  Menu(SnakeHead &head,
+       const string &pathTextureBackgroundGame, const string &pathTextureBackgroundStartMenu,
+       const string &pathTextureBackgroundPause, const string &pathTextureLosingTheGame) :
+    backgroundGame(pathTextureBackgroundGame), backgroundStartMenu(pathTextureBackgroundStartMenu),
+    backgroundPause(pathTextureBackgroundPause), backgroundLossTheGame(pathTextureLosingTheGame)
+  {
+    head.nHeadControlLosingTheGame = head.WithMenu;
+  }
+  
+  enum MenuMode {ContinueGame, StartMenu, Pause, LosingTheGame};
+  int nMenuMode = StartMenu; // Выбор режима меню
+
+  BackgroundLevel backgroundGame;
+  Background backgroundStartMenu;
+  Background backgroundPause;
+  Background backgroundLossTheGame;
+  
+public:
+  void work(Event &event, RenderWindow &window, TimeGame &timeGame, SnakeHead &head)
+  {
+    switch(nMenuMode)
+      {
+
+      case ContinueGame:
+	{
+	  if (head.nHeadControlLosingTheGame == head.GameOver) nMenuMode = LosingTheGame;
+	  controlContinue(event, window, head);
+	  backgroundGame.drawBackground(window);
+	} break;
+	
+      case StartMenu:
+	{
+	  cout << "Start" << endl;
+	  timeGame.skipCounting();
+	  while (nMenuMode == StartMenu)
+	    {
+	      controlStartMenu(event, window);
+	    }
+	} break;
+
+      case Pause:
+	{
+	  cout << "Pause" << endl;
+	  timeGame.skipCounting();
+	  while (nMenuMode == Pause)
+	    {
+	      controlPause(event, window);
+	    }
+	} break;
+
+      case LosingTheGame:
+	{
+	  cout << "Game Over" << endl;
+	  timeGame.skipCounting();
+	  while (nMenuMode == LosingTheGame)
+	    {
+	      controlLosingTheGame(event, window);
+	    }
+	} break;
+		
+      }
+  }
+
+  
+  void closeWindow(Event &event, RenderWindow &window)
+  {
+    if (event.type == Event::Closed)
+      {
+	window.close();
+	nMenuMode = ContinueGame;
+      }
+  }
+
+  
+  void controlContinue(Event &event, RenderWindow &window, SnakeHead &head) // Функция управления игрой
+  {
+    while (window.pollEvent(event))
+      {
+	closeWindow(event, window);
+	head.controlHead(event);
+	
+	if (event.type == Event::KeyPressed)
+	  {   
+	    if (Keyboard::isKeyPressed(Keyboard::Space))
+	      {
+		nMenuMode = Pause;
+	      }
+	  }
+	
+      }
+    
+  }
+
+  
+  void controlStartMenu(Event &event, RenderWindow &window)
+  {
+    while (window.pollEvent(event))
+      {
+	closeWindow(event, window);
+
+	if (event.type == Event::KeyPressed)
+	  {
+	    
+	    if (Keyboard::isKeyPressed(Keyboard::Space))
+	      {
+		nMenuMode = ContinueGame;
+	      }
+
+	    if (Keyboard::isKeyPressed(Keyboard::Escape))
+	      {
+		window.close();
+		nMenuMode = ContinueGame;
+	      }
+	  }
+      }
+  }
+
+  
+  void controlPause(Event &event, RenderWindow &window)
+  {
+    while (window.pollEvent(event))
+      {
+	closeWindow(event, window);
+
+	if (event.type == Event::KeyPressed)
+	  {
+	    
+	    if (Keyboard::isKeyPressed(Keyboard::Space))
+	      {
+		cout << "Play" << endl;
+		nMenuMode = ContinueGame;
+	      }
+
+	    if (Keyboard::isKeyPressed(Keyboard::Escape))
+	      {
+		window.close();
+		nMenuMode = ContinueGame;
+	      }
+	    
+	  }
+      }
+  }
+
+  
+  void controlLosingTheGame(Event &event, RenderWindow &window)
+  {
+    while(window.pollEvent(event))
+      {
+	closeWindow(event, window);
+
+	if (event.type == Event::KeyPressed)
+	  {
+
+	    if (Keyboard::isKeyPressed(Keyboard::Space))
+	      {
+		nMenuMode = ContinueGame;
+	      }
+
+	    if (Keyboard::isKeyPressed(Keyboard::Escape))
+	      {
+		window.close();
+		nMenuMode = ContinueGame;
+	      }
+	    
+	  }
+      }
+  }
+  
+};
+
+
+class SnakeOBJ final
 {
   //protected:
 public:
@@ -216,7 +423,7 @@ public:
 class Food final
 {
 public:
-  explicit Food(Background &background)
+  explicit Food(BackgroundLevel &background)
   {
     textureApple.loadFromFile("./Textures.1.0/Apple.png");                                                // Путь к текстурам яблока
     food.setTexture(textureApple);                                                                        // Присвоение текстуры спрайту
@@ -243,7 +450,7 @@ public:
   float fPositionFoodY;
 
 
-  void eatFood(RenderWindow &window, SnakeHead &head, Background &background)
+  void eatFood(RenderWindow &window, SnakeHead &head, BackgroundLevel &background)
   { // Диапазон съедания еды
     if ((head.fSnakeHeadX + head.sHalfSH >= fPositionFoodX - fHalfFood && head.fSnakeHeadX - head.sHalfSH <= fPositionFoodX + fHalfFood) &&
 	(head.fSnakeHeadY + head.sHalfSH >= fPositionFoodY - fHalfFood && head.fSnakeHeadY - head.sHalfSH <= fPositionFoodY + fHalfFood))
@@ -268,53 +475,14 @@ public:
 };
 
 
-void control(Event &event, RenderWindow &window, SnakeHead &head) // Функция управления игрой
-{
-  while (window.pollEvent(event))
-    {
-
-      if (event.type == Event::Closed)
-	{
-	  window.close();
-	}
-
-
-      if (event.type == Event::KeyPressed)
-	{
-	  if ((Keyboard::isKeyPressed(Keyboard::Up)    || Keyboard::isKeyPressed(Keyboard::W)) && head.sDirection != DOWN)
-	    {
-	      head.sDirection = UP;
-	    }
-
-	  if ((Keyboard::isKeyPressed(Keyboard::Down)  || Keyboard::isKeyPressed(Keyboard::S)) && head.sDirection != UP)
-	    {
-	      head.sDirection = DOWN;
-	    }
-
-	  if ((Keyboard::isKeyPressed(Keyboard::Left)  || Keyboard::isKeyPressed(Keyboard::A)) && head.sDirection != RIGHT)
-	    {
-	      head.sDirection = LEFT;
-	    }
-	  
-	  if ((Keyboard::isKeyPressed(Keyboard::Right) || Keyboard::isKeyPressed(Keyboard::D)) && head.sDirection != LEFT)
-	    {
-	      head.sDirection = RIGHT;
-	    } 
-	}
-      
-    }
-
-};
-
-
 int main()
 {  
   // Объекты игры
 
   TimeGame timeGame;
-  Background background;
   SnakeOBJ snake;
-  Food someFood(background);
+  Menu menu(snake.head, "./Textures.1.0/Wall.png", "", "", "");
+  Food someFood(menu.backgroundGame);
   Event event;
   
   RenderWindow window(VideoMode(fWidthWindow, fHeigthWindow), "Snake: Eat or Die! V.1.0");
@@ -322,12 +490,11 @@ int main()
   while (window.isOpen())
     {
       // Работа игры
-      
-      control(event, window, snake.head);
+
+      menu.work(event, window, timeGame, snake.head);
       timeGame.averageTime();
-      background.drawBackground(window);
       snake.motionAndViewTail(window, timeGame);
-      someFood.eatFood(window, snake.head, background);
+      someFood.eatFood(window, snake.head, menu.backgroundGame);
 
       // Отрисовка
       
