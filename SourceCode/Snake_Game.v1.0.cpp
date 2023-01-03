@@ -40,10 +40,23 @@ public:
     textureBackground.loadFromFile(pathOfTexture); // Путь к текстурам фона
     backgroundArea.setTexture(textureBackground);  // Присвоение текстуры спрайту
   }
+
+  Background(const string &path, const short &sizeX, const short &sizeY) : pathOfTexture(path), sSizeBackgroundX(sizeX), sSizeBackgroundY(sizeY)
+  {
+    textureBackground.loadFromFile(pathOfTexture); // Путь к текстурам фона
+    backgroundArea.setTexture(textureBackground);  // Присвоение текстуры спрайту
+    sHalfSizeBackgroundX = sSizeBackgroundX / 2;
+    sHalfSizeBackgroundY = sSizeBackgroundY / 2;
+    backgroundArea.setOrigin(sHalfSizeBackgroundX, sHalfSizeBackgroundY);
+  }
   
   Texture textureBackground;
   Sprite backgroundArea; 
   string pathOfTexture;
+  short sSizeBackgroundX;
+  short sSizeBackgroundY;
+  short sHalfSizeBackgroundX;
+  short sHalfSizeBackgroundY;
   
   void drawBackground(RenderWindow &window)
   {
@@ -109,10 +122,13 @@ public:
   Menu(SnakeHead &head,
        const string &pathTextureBackgroundGame, const string &pathTextureBackgroundStartMenu,
        const string &pathTextureBackgroundPause, const string &pathTextureLosingTheGame) :
-    backgroundGame(pathTextureBackgroundGame), backgroundStartMenu(pathTextureBackgroundStartMenu),
-    backgroundPause(pathTextureBackgroundPause), backgroundLossTheGame(pathTextureLosingTheGame)
+    backgroundGame(pathTextureBackgroundGame), backgroundStartMenu(pathTextureBackgroundStartMenu, 535, 315),
+    backgroundPause(pathTextureBackgroundPause, 535, 315), backgroundLossTheGame(pathTextureLosingTheGame, 535, 315)
   {
     head.nHeadControlLosingTheGame = head.WithMenu;
+    backgroundStartMenu.backgroundArea.setPosition(fWidthField / 2, fHeigthField / 2);
+    backgroundPause.backgroundArea.setPosition(fWidthField / 2, fHeigthField / 2);
+    backgroundLossTheGame.backgroundArea.setPosition(fWidthField / 2, fHeigthField / 2);
   }
   
   enum MenuMode {ContinueGame, StartMenu, Pause, LosingTheGame};
@@ -139,6 +155,8 @@ public:
       case StartMenu:
 	{
 	  cout << "Start" << endl;
+	  backgroundStartMenu.drawBackground(window);
+	  window.display();
 	  timeGame.skipCounting();
 	  while (nMenuMode == StartMenu)
 	    {
@@ -149,6 +167,8 @@ public:
       case Pause:
 	{
 	  cout << "Pause" << endl;
+	  backgroundPause.drawBackground(window);
+	  window.display();
 	  timeGame.skipCounting();
 	  while (nMenuMode == Pause)
 	    {
@@ -159,6 +179,8 @@ public:
       case LosingTheGame:
 	{
 	  cout << "Game Over" << endl;
+	  backgroundLossTheGame.drawBackground(window);
+	  window.display();
 	  timeGame.skipCounting();
 	  while (nMenuMode == LosingTheGame)
 	    {
@@ -481,7 +503,7 @@ int main()
 
   TimeGame timeGame;
   SnakeOBJ snake;
-  Menu menu(snake.head, "./Textures.1.0/Wall.png", "", "", "");
+  Menu menu(snake.head, "./Textures.1.0/Wall.png", "./Textures.1.0/MenuWindow.png", "./Textures.1.0/MenuWindow.png", "./Textures.1.0/MenuWindow.png");
   Food someFood(menu.backgroundGame);
   Event event;
   
