@@ -14,15 +14,15 @@ Menu::Menu(SnakeHead &head,
 }
 
 
-void Menu::work(Event &event, RenderWindow &window, TimeGame &timeGame, SnakeHead &head) // Включение работы меню
+void Menu::work(Event &event, RenderWindow &window, TimeGame &timeGame, SnakeOBJ &snake) // Включение работы меню
 {
   switch(nMenuMode)
     {
       
     case ContinueGame:
       {
-	if (head.nHeadControlLosingTheGame == head.GameOver) nMenuMode = LosingTheGame;
-	controlContinue(event, window, head);
+	if (snake.head.nHeadControlLosingTheGame == snake.head.GameOver) nMenuMode = LosingTheGame;
+	controlContinue(event, window, snake.head);
 	backgroundGame.drawBackground(window);
       } break;
       
@@ -58,7 +58,7 @@ void Menu::work(Event &event, RenderWindow &window, TimeGame &timeGame, SnakeHea
 	timeGame.skipCounting();
 	while (nMenuMode == LosingTheGame)
 	  {
-	    controlLosingTheGame(event, window);
+	    controlLosingTheGame(event, window, snake);
 	  }
       } break;
       
@@ -146,7 +146,7 @@ void Menu::controlPause(Event &event, RenderWindow &window) // Управлен�
 }
 
   
-void Menu::controlLosingTheGame(Event &event, RenderWindow &window) // Управление после проигрыша игры
+void Menu::controlLosingTheGame(Event &event, RenderWindow &window, SnakeOBJ &snake) // Управление после проигрыша игры
 {
   while(window.pollEvent(event))
     {
@@ -157,6 +157,7 @@ void Menu::controlLosingTheGame(Event &event, RenderWindow &window) // Упра�
 	  
 	  if (Keyboard::isKeyPressed(Keyboard::Space))
 	    {
+	      snake.head.resetHead();
 	      nMenuMode = ContinueGame;
 	    }
 	  

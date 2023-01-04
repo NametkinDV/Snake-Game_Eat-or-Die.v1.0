@@ -5,7 +5,7 @@
 #include <SFML/Graphics.hpp>
 #include "CommonSettings.h"
 #include "TimeGame.h"
-#include "SnakeHead.h"
+#include "SnakeOBJ.h"
 #include "Background.h"
 #include "BackgroundLevel.h"
 
@@ -32,12 +32,12 @@ public:
 
   
 public:
-  void work(Event &event, RenderWindow &window, TimeGame &timeGame, SnakeHead &head); // Включение работы меню
+  void work(Event &event, RenderWindow &window, TimeGame &timeGame, SnakeOBJ &snake); // Включение работы меню
   void closeWindow(Event &event, RenderWindow &window);                               // Закрытие окна
   void controlContinue(Event &event, RenderWindow &window, SnakeHead &head);          // Управление во время течения игры
   void controlStartMenu(Event &event, RenderWindow &window);                          // Управление в начальном меню
   void controlPause(Event &event, RenderWindow &window);                              // Управление во время паузы
-  void controlLosingTheGame(Event &event, RenderWindow &window);                      // Управление после проигрыша игры
+  void controlLosingTheGame(Event &event, RenderWindow &window, SnakeOBJ &snake);     // Управление после проигрыша игры
 
 };
 

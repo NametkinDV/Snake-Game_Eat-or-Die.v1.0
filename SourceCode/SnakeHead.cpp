@@ -115,3 +115,14 @@ void SnakeHead::controlHead (Event event)
 	      }
 	  }
 }
+
+
+void SnakeHead::resetHead() // Сброс параметров головы змейки до начальных
+{
+  snakeHead.setTextureRect(IntRect(sDirectionHead[UP][0],sDirectionHead[UP][1], sSizeHead, sSizeHead));
+  fSnakeHeadX = (fWidthField / 2);
+  fSnakeHeadY = (fHeigthField / 2);
+  snakeHead.setPosition(fSnakeHeadX, fSnakeHeadY);
+  sDirection = -1;
+  nHeadControlLosingTheGame = WithMenu;
+}
