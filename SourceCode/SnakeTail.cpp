@@ -24,9 +24,7 @@ SnakeTail::SnakeTail(SnakeHead &head)
     {
     case 1:
       {
-	fSnakeTailX = head.fSnakeHeadX;                                                                      // Координаты хвоста по ширине в начале игры
-	fSnakeTailY = head.fSnakeHeadY + head.sHalfSH + sHalfST;                                             // Координаты хвоста по высоте в начале игры
-	snakeTail.setPosition(fSnakeTailX, fSnakeTailY);                                                     // Позиция хвоста в начале игры
+	snakeTail.setPosition(head.fSnakeHeadX, head.fSnakeHeadY + head.sHalfSH + sHalfST);                // Позиция хвоста в начале игры
 	snakeTail.setTexture(firstEndTail);
 	++SnakeTail::snCount;
 	++SnakeTail::snPrevCount;
@@ -34,9 +32,7 @@ SnakeTail::SnakeTail(SnakeHead &head)
 
     case 2:
       {
-	fSnakeTailX = head.fSnakeHeadX;
-	fSnakeTailY = head.fSnakeHeadY + head.sHalfSH + sSizeTail + sHalfST;
-	snakeTail.setPosition(fSnakeTailX, fSnakeTailY);
+	snakeTail.setPosition(head.fSnakeHeadX, head.fSnakeHeadY + head.sHalfSH + sSizeTail + sHalfST);
       } break;
     }
 }
@@ -46,5 +42,14 @@ short SnakeTail::snCount = 1;
 short SnakeTail::snPrevCount = 1;
 int SnakeTail::nDelay = 0;
 int SnakeTail::nHeadDelayDiffer = 0;
-int SnakeTail::nSizeTail = 1500;
+int SnakeTail::nMaxDelay = 1500;
 bool SnakeTail::bStartWithTime = false;
+
+
+void SnakeTail::resetStaticDataTail() // Функция сброса статических параметров хвоста змейки до начальных
+{
+  SnakeTail::snCount = 2;
+  SnakeTail::snPrevCount = 2;
+  SnakeTail::nDelay = 0;
+  SnakeTail::nMaxDelay = 1500;
+}

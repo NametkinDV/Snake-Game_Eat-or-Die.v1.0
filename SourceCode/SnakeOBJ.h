@@ -26,9 +26,15 @@ public:
   ~SnakeOBJ();
 
 
-  void motionAndViewTail (RenderWindow &window, TimeGame &timeGame); // Функция, управляющая работой хвоста
-
+  void movementAndDisplay (RenderWindow &window, TimeGame &timeGame); // Функция, управляющая работой хвоста
+  void saveHeadRoute();                                               // Функция сохранения маршрута головы
+  void deleteRedundantHeadRoute();                                    // Функция удаления лишнего маршрута головы
+  void tailDelayCalculation(TimeGame &timeGame);                      // Функция вычисления задержки ячеек хвоста друг за другом
+  void setEndTailTexture(short &endPosition);                         // Установка текстур туловища и первой половины конца хвоста
+  void setPositionAndDirection(short &position);                      // Установка позиции и направления текстуры
+  void drawTail(RenderWindow &window);                                // Отрисовка хвоста на экране
+  void resetTail(vector <SnakeTail*> &tail);                          // Функция сброса параметров хвоста змейки до начальных
+  
 };
-
 
 #endif

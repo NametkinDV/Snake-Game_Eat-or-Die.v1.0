@@ -33,7 +33,7 @@ public:
   
   void motionAndViewHead (RenderWindow &window, const double &time); // Функция движения головы
   void controlHead (Event event); // Функция управления головой
-  void resetHead(); // Сброс параметров головы змейки до начальных
+  void resetHead(); // Функция сброса параметров головы змейки до начальных
   
 };
 #endif

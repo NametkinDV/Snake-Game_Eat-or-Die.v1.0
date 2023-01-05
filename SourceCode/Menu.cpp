@@ -158,6 +158,7 @@ void Menu::controlLosingTheGame(Event &event, RenderWindow &window, SnakeOBJ &sn
 	  if (Keyboard::isKeyPressed(Keyboard::Space))
 	    {
 	      snake.head.resetHead();
+	      snake.resetTail(snake.tail);
 	      nMenuMode = ContinueGame;
 	    }
 	  

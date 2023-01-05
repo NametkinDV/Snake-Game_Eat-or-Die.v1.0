@@ -90,7 +90,8 @@ void SnakeHead::motionAndViewHead (RenderWindow &window, const double &time) // 
   window.draw(snakeHead); // Отрисовка головы на экране
 }
 
-void SnakeHead::controlHead (Event event)
+
+void SnakeHead::controlHead (Event event) // Функция управления головой
 {
   if (event.type == Event::KeyPressed)
 	  {
@@ -117,7 +118,7 @@ void SnakeHead::controlHead (Event event)
 }
 
 
-void SnakeHead::resetHead() // Сброс параметров головы змейки до начальных
+void SnakeHead::resetHead() // Функция сброса параметров головы змейки до начальных
 {
   snakeHead.setTextureRect(IntRect(sDirectionHead[UP][0],sDirectionHead[UP][1], sSizeHead, sSizeHead));
   fSnakeHeadX = (fWidthField / 2);

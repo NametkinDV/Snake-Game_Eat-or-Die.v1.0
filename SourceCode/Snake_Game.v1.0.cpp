@@ -36,7 +36,7 @@ int main()
 
       menu.work(event, window, timeGame, snake);
       timeGame.averageTime();
-      snake.motionAndViewTail(window, timeGame);
+      snake.movementAndDisplay(window, timeGame);
       someFood.eatFood(window, snake.head, menu.backgroundGame);
 
       // Отрисовка
