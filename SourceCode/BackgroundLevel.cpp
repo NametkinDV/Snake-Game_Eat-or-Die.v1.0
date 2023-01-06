@@ -27,11 +27,19 @@ void BackgroundLevel::drawBackground(RenderWindow &window) // Отрисовка
 
 void BackgroundLevel::increasePoints() // Добавление очков счёту игрока
 {
-  num += 10;
-  szStringNumber = to_string(num);
+  nGamePoints += 10;
+  szStringNumber = to_string(nGamePoints);
   
-  if (num >= 10000) textScore.text.setString(szStringText + szStringNumber);
-  else if (num >= 1000) textScore.text.setString(szStringText + "0" + szStringNumber);
-  else if (num >= 100) textScore.text.setString(szStringText + "00" + szStringNumber);
+  if (nGamePoints >= 10000) textScore.text.setString(szStringText + szStringNumber);
+  else if (nGamePoints >= 1000) textScore.text.setString(szStringText + "0" + szStringNumber);
+  else if (nGamePoints >= 100) textScore.text.setString(szStringText + "00" + szStringNumber);
   else textScore.text.setString(szStringText + "000" + szStringNumber);
+}
+
+
+void BackgroundLevel::resetPoints() // Обнуление счёта очков
+{
+  nGamePoints = 0;
+  szStringNumber = to_string(nGamePoints);
+  textScore.text.setString(szStringText + "0000" + szStringNumber);
 }

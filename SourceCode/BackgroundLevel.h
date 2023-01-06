@@ -16,13 +16,14 @@ public:
   RectangleShape rectangle;
   short snSizeRectangle = 30;
 
-  int num = 0; 
+  int nGamePoints = 0; 
   string szStringText = "Score: ", szStringNumber = "00000";
   
   
   void drawBackground(RenderWindow &window); // Отрисовка фона в окне
-  void increasePoints(); // Добавление очков счёту игрока
+  void increasePoints();                     // Добавление очков счёту игрока
+  void resetPoints();                        // Обнуление счёта очков 
+  
 };
-
 
 #endif

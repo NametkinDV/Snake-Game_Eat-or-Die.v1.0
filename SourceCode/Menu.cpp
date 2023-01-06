@@ -4,13 +4,25 @@
 Menu::Menu(SnakeHead &head,
 	   const string &pathTextureBackgroundGame, const string &pathTextureBackgroundStartMenu,
 	   const string &pathTextureBackgroundPause, const string &pathTextureLosingTheGame) :
-  backgroundGame(pathTextureBackgroundGame), backgroundStartMenu(pathTextureBackgroundStartMenu, 535, 315),
-  backgroundPause(pathTextureBackgroundPause, 535, 315), backgroundLossTheGame(pathTextureLosingTheGame, 535, 315)
+  backgroundGame(pathTextureBackgroundGame), backgroundStartMenu(pathTextureBackgroundStartMenu, 535, 315, 3),
+  backgroundPause(pathTextureBackgroundPause, 535, 315, 3), backgroundLossTheGame(pathTextureLosingTheGame, 535, 315, 3)
 {
   head.nHeadControlLosingTheGame = head.WithMenu;
+
   backgroundStartMenu.backgroundArea.setPosition(fWidthField / 2, fHeigthField / 2);
   backgroundPause.backgroundArea.setPosition(fWidthField / 2, fHeigthField / 2);
   backgroundLossTheGame.backgroundArea.setPosition(fWidthField / 2, fHeigthField / 2);
+
+  backgroundStartMenu.textLine[1].setSizeTextPosition(18, "   Press Space\n to start game", 145, 270);
+  backgroundStartMenu.textLine[2].setSizeTextPosition(18, "Press ESC to exit", 402, 282);
+
+  backgroundPause.textLine[0].setSizeTextPosition(50, "Pause", 275, 100);
+  backgroundPause.textLine[1].setSizeTextPosition(18, "        Press Space\n to continue game", 128, 270);
+  backgroundPause.textLine[2].setSizeTextPosition(18, "Press ESC to exit", 402, 282);
+
+  backgroundLossTheGame.textLine[0].setSizeTextPosition(50, "Game Over", 210, 100);
+  backgroundLossTheGame.textLine[1].setSizeTextPosition(18, "Press Space\n      to retry", 158, 270);
+  backgroundLossTheGame.textLine[2].setSizeTextPosition(18, "Press ESC to exit", 402, 282);
 }
 
 
@@ -58,7 +70,7 @@ void Menu::work(Event &event, RenderWindow &window, TimeGame &timeGame, SnakeOBJ
 	timeGame.skipCounting();
 	while (nMenuMode == LosingTheGame)
 	  {
-	    controlLosingTheGame(event, window, snake);
+	    controlLosingTheGame(event, window, snake, backgroundGame);
 	  }
       } break;
       
@@ -146,7 +158,7 @@ void Menu::controlPause(Event &event, RenderWindow &window) // Управлен�
 }
 
   
-void Menu::controlLosingTheGame(Event &event, RenderWindow &window, SnakeOBJ &snake) // Управление после проигрыша игры
+void Menu::controlLosingTheGame(Event &event, RenderWindow &window, SnakeOBJ &snake, BackgroundLevel &bLevel) // Управление после проигрыша игры
 {
   while(window.pollEvent(event))
     {
@@ -159,6 +171,7 @@ void Menu::controlLosingTheGame(Event &event, RenderWindow &window, SnakeOBJ &sn
 	    {
 	      snake.head.resetHead();
 	      snake.resetTail(snake.tail);
+	      bLevel.resetPoints();
 	      nMenuMode = ContinueGame;
 	    }
 	  
